@@ -66,8 +66,8 @@ const loginUser = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ message: "All fields required ❌" });
     }
-
-    const user = await User.findOne({ email });
+    const emailLower = email.toLowerCase();
+    const user = await User.findOne({ email: emailLower });
     if (!user) {
       return res.status(404).json({ message: "User not found ❌" });
     }
