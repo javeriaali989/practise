@@ -52,9 +52,9 @@ const createBooking = async (req, res) => {
 
     await booking.save();
 
-    res.json({ 
-      message: "Booking created successfully ✅", 
-      booking 
+    res.json({
+      message: "Booking created successfully ✅",
+      booking
     });
   } catch (error) {
     console.error("Booking creation error:", error);
@@ -83,9 +83,9 @@ const updateBookingStatus = async (req, res) => {
       return res.status(404).json({ message: "Booking not found ❌" });
     }
 
-    res.json({ 
-      message: "Booking status updated ✅", 
-      booking 
+    res.json({
+      message: "Booking status updated ✅",
+      booking
     });
   } catch (error) {
     res.status(500).json({ message: "Error updating booking ❌", error: error.message });
@@ -107,9 +107,9 @@ const getBookingById = async (req, res) => {
     res.json(booking);
   } catch (error) {
     console.error("Get booking error:", error);
-    res.status(500).json({ 
-      message: "Error fetching booking ❌", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error fetching booking ❌",
+      error: error.message
     });
   }
 };
@@ -128,9 +128,9 @@ const getBookingMessages = async (req, res) => {
     res.json(messages);
   } catch (error) {
     console.error("Get messages error:", error);
-    res.status(500).json({ 
-      message: "Error fetching messages ❌", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error fetching messages ❌",
+      error: error.message
     });
   }
 };
@@ -173,15 +173,15 @@ const sendBookingMessage = async (req, res) => {
     booking.messages.push(newMessage);
     await booking.save();
 
-    res.json({ 
-      message: "Message sent ✅", 
-      messages: booking.messages 
+    res.json({
+      message: "Message sent ✅",
+      messages: booking.messages
     });
   } catch (error) {
     console.error("Send message error:", error);
-    res.status(500).json({ 
-      message: "Error sending message ❌", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error sending message ❌",
+      error: error.message
     });
   }
 };
@@ -216,35 +216,98 @@ const providerCompleteService = async (req, res) => {
     res.status(500).json({ message: "Error completing service ❌", error: error.message });
   }
 };
+// const userConfirmBooking = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const finalId = id || bookingId; // Handle both parameter names
+//     const { rating, review } = req.body;
+
+//     const booking = await Booking.findById(id);
+//     if (!booking) return res.status(404).json({ message: 'Booking not found' });
+
+//     // mark as completed by user
+//     booking.completedByUser = true;
+//     booking.userRating = rating;
+//     booking.userReview = review;
+//     booking.status = 'payment-released'; // update status if provider also completed
+//     await booking.save();
+
+//     res.json({ message: 'Booking confirmed by user ✅', booking });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// };
+
 const userConfirmBooking = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id, bookingId } = req.params;
+    const finalId = id || bookingId; // Handle both parameter names
     const { rating, review } = req.body;
 
-    const booking = await Booking.findById(id);
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    const booking = await Booking.findById(finalId);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found ❌' });
+    }
 
-    // mark as completed by user
+    // Check if already confirmed
+    if (booking.status === 'payment-released' || booking.completedByUser) {
+      return res.status(400).json({ message: 'Booking already confirmed ❌' });
+    }
+
+    // Check if provider completed first
+    if (!booking.completedByProvider) {
+      return res.status(400).json({ message: 'Provider has not completed the service yet ❌' });
+    }
+
+    // Update booking
     booking.completedByUser = true;
     booking.userRating = rating;
     booking.userReview = review;
-    booking.status = 'payment-released'; // update status if provider also completed
+    booking.status = 'payment-released';
     await booking.save();
 
-    res.json({ message: 'Booking confirmed by user ✅', booking });
+    // ⭐ RELEASE PAYMENT TO PROVIDER WALLET ⭐
+    const Wallet = require('../models/wallet'); // Import Wallet model
+
+    const providerWallet = await Wallet.findOne({ userId: booking.providerId });
+    if (!providerWallet) {
+      return res.status(404).json({ message: 'Provider wallet not found ❌' });
+    }
+
+    // Add payment to provider's available balance
+    providerWallet.balance += booking.agreedPrice;
+    providerWallet.totalEarned += booking.agreedPrice;
+
+    // Add transaction record
+    providerWallet.transactions.push({
+      type: 'credit',
+      amount: booking.agreedPrice,
+      reference: `Booking #${finalId.slice(-6)}`,
+      status: 'completed',
+      bookingId: finalId,
+      createdAt: new Date(),
+    });
+
+    await providerWallet.save();
+
+    res.json({
+      message: 'Payment released to provider ✅',
+      booking,
+      walletUpdated: true
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Confirm booking error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
-
 
 module.exports = {
   getBookings,
   createBooking,
   updateBookingStatus,
   getBookingById,
-    getBookingMessages,  // ← Export
+  getBookingMessages,  // ← Export
   sendBookingMessage,
   startService,
   providerCompleteService,

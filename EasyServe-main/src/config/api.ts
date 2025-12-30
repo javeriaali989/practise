@@ -6,11 +6,13 @@ import { Platform } from 'react-native';
 const getBaseURL = () => {
   if (Platform.OS === 'android') {
     // For Android Emulator
-    return 'http://192.168.0.107:5000/api';
-  } else if (Platform.OS === 'ios') {
+    return 'http://192.168.100.6:5000/api';
+  }
+  else if (Platform.OS === 'ios') {
     // For iOS Simulator
     return 'http://localhost:5000/api';
-  } else {
+  }
+  else {
     // For web
     return 'http://localhost:5000/api';
   }
@@ -57,14 +59,14 @@ api.interceptors.response.use(
   },
   async (error) => {
     console.error('❌ API Error:', error.config?.url, error.message);
-    
+
     if (error.response) {
       console.error('Response data:', error.response.data);
       console.error('Response status:', error.response.status);
     } else if (error.request) {
       console.error('No response received:', error.request);
     }
-    
+
     if (error.response?.status === 401) {
       // Token expired or invalid
       await AsyncStorage.removeItem('userToken');

@@ -74,13 +74,18 @@ export default function UserBookingDetailsScreen({ route, navigation }: any) {
           text: 'Confirm',
           onPress: async () => {
             try {
-              await api.post(`/bookings/${bookingId}/user-confirm`, {
+              // await api.post(`/bookings/${bookingId}/user-confirm`, {
+              //   rating,
+              //   review,
+              // });
+              await api.post(`/bookings/${bookingId}/confirm-release`, {
                 rating,
                 review,
               });
               await api.post(`/bookings/${bookingId}/confirm-release`);
               Alert.alert('Success', 'Service completed and payment released!');
               loadBooking();
+              navigation.goBack(); // Go back to bookings list
             } catch (error: any) {
               Alert.alert('Error', error.response?.data?.message || 'Failed to confirm');
             }
@@ -90,7 +95,7 @@ export default function UserBookingDetailsScreen({ route, navigation }: any) {
     );
   };
 
-  
+
 
   if (loading) {
     return (
@@ -125,11 +130,11 @@ export default function UserBookingDetailsScreen({ route, navigation }: any) {
       'in-progress': {
         color: '#2196F3',
         icon: '🔨',
-        message: booking.completedByProvider 
-          ? 'Provider completed. Please confirm to release payment' 
+        message: booking.completedByProvider
+          ? 'Provider completed. Please confirm to release payment'
           : 'Service in progress',
-        actions: booking.completedByProvider 
-          ? ['complete', 'dispute', 'message'] 
+        actions: booking.completedByProvider
+          ? ['complete', 'dispute', 'message']
           : ['message', 'dispute'],
       },
       'completed': {
@@ -249,7 +254,7 @@ export default function UserBookingDetailsScreen({ route, navigation }: any) {
         {booking.status === 'in-progress' && booking.completedByProvider && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Rate & Review</Text>
-            
+
             <View style={styles.starRow}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <TouchableOpacity key={star} onPress={() => setRating(star)}>
