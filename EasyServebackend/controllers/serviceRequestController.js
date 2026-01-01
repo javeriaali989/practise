@@ -1,4 +1,4 @@
-const ServiceRequest = require("../models/ServiceRequest");
+const ServiceRequest = require("../models/serviceRequest");
 const Bid = require("../models/Bid");
 const User = require("../models/user");
 const Booking = require("../models/booking"); // ← ADD THIS IMPORT
