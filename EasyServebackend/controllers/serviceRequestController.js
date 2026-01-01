@@ -2,7 +2,7 @@ const ServiceRequest = require("../models/serviceRequest");
 const Bid = require("../models/Bid");
 const User = require("../models/user");
 const Booking = require("../models/booking"); // ← ADD THIS IMPORT
-const Provider = require("../models/Provider");
+const Provider = require("../models/provider");
 // GET all service requests
 const getServiceRequests = async (req, res) => {
   try {

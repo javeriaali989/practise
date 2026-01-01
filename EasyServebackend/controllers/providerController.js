@@ -1,5 +1,5 @@
 const Provider = require("../models/provider");
-const ServiceRequest = require("../models/ServiceRequest");
+const ServiceRequest = require("../models/serviceRequest");
 
 /* ==================== PROVIDER OPERATIONS ==================== */
 // GET all providers with optional filters
