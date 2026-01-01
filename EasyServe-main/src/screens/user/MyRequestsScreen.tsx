@@ -14,8 +14,8 @@ import { logger } from '../../utils/logger';
 import { STATUS_COLORS, STATUS_ICONS } from '../../utils/constants';
 import { formatters } from '../../utils/formatter';
 import { ServiceRequest } from '../../types';
-const TAG = 'MyRequestsScreen';
 
+const TAG = 'MyRequestsScreen';
 
 export default function MyRequestsScreen({ navigation }: any) {
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
@@ -38,7 +38,8 @@ export default function MyRequestsScreen({ navigation }: any) {
 
       const sortedRequests = (res.data || []).sort(
         (a: ServiceRequest, b: ServiceRequest) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime()
       );
 
       setRequests(sortedRequests);
@@ -58,12 +59,23 @@ export default function MyRequestsScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          activeOpacity={0.7}
+        >
           <Text style={styles.backButton}>← Back</Text>
         </TouchableOpacity>
+
         <Text style={styles.title}>My Requests</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Home')}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Text style={styles.addButton}>+ New</Text>
         </TouchableOpacity>
       </View>
@@ -71,14 +83,19 @@ export default function MyRequestsScreen({ navigation }: any) {
       {loading ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#4CAF50" />
+          <Text style={styles.loadingText}>Loading your requests…</Text>
         </View>
       ) : requests.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>📝</Text>
           <Text style={styles.emptyText}>No service requests yet</Text>
-          <Text style={styles.emptySubtext}>Create your first request to get started</Text>
+          <Text style={styles.emptySubtext}>
+            Create your first request to start receiving offers
+          </Text>
+
           <TouchableOpacity
             style={styles.createButton}
+            activeOpacity={0.85}
             onPress={() => navigation.navigate('Home')}
           >
             <Text style={styles.createButtonText}>Create Request</Text>
@@ -95,17 +112,25 @@ export default function MyRequestsScreen({ navigation }: any) {
               colors={['#4CAF50']}
             />
           }
+          contentContainerStyle={styles.list}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
+              activeOpacity={0.85}
               onPress={() =>
-                navigation.navigate('RequestDetails', { requestId: item._id })
+                navigation.navigate('RequestDetails', {
+                  requestId: item._id,
+                })
               }
             >
+              {/* Card Header */}
               <View style={styles.cardHeader}>
                 <View style={styles.categoryBadge}>
-                  <Text style={styles.categoryText}>{item.categoryName}</Text>
+                  <Text style={styles.categoryText}>
+                    {item.categoryName}
+                  </Text>
                 </View>
+
                 <View
                   style={[
                     styles.statusBadge,
@@ -119,23 +144,28 @@ export default function MyRequestsScreen({ navigation }: any) {
                 </View>
               </View>
 
+              {/* Description */}
               <Text style={styles.description} numberOfLines={2}>
                 {item.description}
               </Text>
 
+              {/* Footer */}
               <View style={styles.cardFooter}>
                 {item.requestType === 'fixed' ? (
                   <View style={styles.priceTag}>
-                    <Text style={styles.priceLabel}>Fixed:</Text>
+                    <Text style={styles.priceLabel}>Fixed</Text>
                     <Text style={styles.priceValue}>
                       {formatters.currency(item.fixedAmount || 0)}
                     </Text>
                   </View>
                 ) : (
                   <View style={styles.priceTag}>
-                    <Text style={styles.bidsText}>Open for Bids 💰</Text>
+                    <Text style={styles.bidsText}>
+                      Open for bids 💰
+                    </Text>
                   </View>
                 )}
+
                 <Text style={styles.dateText}>
                   {formatters.date(item.createdAt)}
                 </Text>
@@ -150,7 +180,6 @@ export default function MyRequestsScreen({ navigation }: any) {
               )}
             </TouchableOpacity>
           )}
-          contentContainerStyle={styles.list}
         />
       )}
     </View>
@@ -159,62 +188,197 @@ export default function MyRequestsScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FA' },
+
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: 50,
-    paddingBottom: 20,
+    paddingBottom: 18,
     paddingHorizontal: 20,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  backButton: { fontSize: 16, color: '#4CAF50', fontWeight: '600' },
-  title: { fontSize: 20, fontWeight: '800', color: '#333' },
-  addButton: { fontSize: 16, color: '#4CAF50', fontWeight: '700' },
-  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  emptyIcon: { fontSize: 80, marginBottom: 20 },
-  emptyText: { fontSize: 20, fontWeight: '700', color: '#333', marginBottom: 8 },
-  emptySubtext: { fontSize: 15, color: '#999', textAlign: 'center', marginBottom: 30 },
+
+  backButton: {
+    fontSize: 15,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+
+  title: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#333',
+  },
+
+  addButton: {
+    fontSize: 15,
+    color: '#4CAF50',
+    fontWeight: '700',
+  },
+
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 6,
+  },
+
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 28,
+  },
+
   createButton: {
     backgroundColor: '#4CAF50',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 24,
+    elevation: 4,
   },
-  createButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  list: { padding: 20 },
+
+  createButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  list: {
+    padding: 16,
+  },
+
   card: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
+    marginBottom: 14,
     elevation: 3,
   },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  categoryBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  categoryText: { fontSize: 12, fontWeight: '700', color: '#1976D2' },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, gap: 4 },
-  statusIcon: { fontSize: 12 },
-  statusText: { fontSize: 11, fontWeight: '700', color: '#fff', textTransform: 'uppercase' },
-  description: { fontSize: 15, color: '#333', lineHeight: 22, marginBottom: 12 },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  priceTag: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  priceLabel: { fontSize: 13, color: '#666', fontWeight: '500' },
-  priceValue: { fontSize: 16, fontWeight: '800', color: '#4CAF50' },
-  bidsText: { fontSize: 14, fontWeight: '700', color: '#FF9800' },
-  dateText: { fontSize: 12, color: '#999' },
-  bidsIndicator: { marginTop: 12, backgroundColor: '#FFF3E0', padding: 8, borderRadius: 8, alignItems: 'center' },
-  bidsIndicatorText: { fontSize: 13, fontWeight: '600', color: '#F57C00' },
+
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+
+  categoryBadge: {
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+
+  categoryText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1976D2',
+  },
+
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    gap: 4,
+  },
+
+  statusIcon: {
+    fontSize: 12,
+    color: '#fff',
+  },
+
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
+    textTransform: 'uppercase',
+  },
+
+  description: {
+    fontSize: 15,
+    color: '#333',
+    lineHeight: 22,
+    marginBottom: 12,
+  },
+
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  priceTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+
+  priceLabel: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
+  },
+
+  priceValue: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#4CAF50',
+  },
+
+  bidsText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FF9800',
+  },
+
+  dateText: {
+    fontSize: 12,
+    color: '#999',
+  },
+
+  bidsIndicator: {
+    marginTop: 12,
+    backgroundColor: '#FFF3E0',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+
+  bidsIndicatorText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#F57C00',
+  },
 });

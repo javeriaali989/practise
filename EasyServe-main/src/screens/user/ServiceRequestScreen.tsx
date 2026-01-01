@@ -1,5 +1,5 @@
 // ============================================
-// screens/user/ServiceRequestScreen.tsx - WITH IMAGE UPLOAD
+// screens/user/ServiceRequestScreen.tsx - UX TEXT REWRITE
 // ============================================
 
 import React, { useState } from 'react';
@@ -34,7 +34,7 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
   const pickImage = async () => {
     try {
       if (images.length >= 5) {
-        Alert.alert('Limit', 'Maximum 5 images allowed');
+        Alert.alert('Limit Reached', 'You can upload a maximum of 5 photos.');
         return;
       }
 
@@ -58,7 +58,7 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
       }
     } catch (error) {
       logger.error(TAG, 'Image picker error', error);
-      Alert.alert('Error', 'Failed to pick image');
+      Alert.alert('Error', 'Failed to select image. Please try again.');
     }
   };
 
@@ -68,14 +68,14 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
 
   const handleSubmit = async () => {
     if (!description.trim()) {
-      Alert.alert('Error', 'Please describe your service request');
+      Alert.alert('Missing Details', 'Please describe the work you need done.');
       return;
     }
 
     if (description.length > VALIDATION.MAX_DESCRIPTION_LENGTH) {
       Alert.alert(
-        'Error',
-        `Description too long (max ${VALIDATION.MAX_DESCRIPTION_LENGTH} characters)`
+        'Too Long',
+        `Your description is too long. Maximum ${VALIDATION.MAX_DESCRIPTION_LENGTH} characters allowed.`
       );
       return;
     }
@@ -83,7 +83,7 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
     if (isFixedPrice) {
       const priceValidation = validators.price(fixedAmount);
       if (!priceValidation.valid) {
-        Alert.alert('Error', priceValidation.error);
+        Alert.alert('Invalid Budget', priceValidation.error);
         return;
       }
     }
@@ -92,7 +92,7 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
     try {
       const user = await authService.getCurrentUser();
       if (!user) {
-        Alert.alert('Error', 'Please login first');
+        Alert.alert('Not Logged In', 'Please log in to post a request.');
         navigation.navigate('Login');
         return;
       }
@@ -117,10 +117,10 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
 
       logger.info(TAG, 'Request created successfully');
       Alert.alert(
-        'Success',
+        'Request Posted!',
         isFixedPrice
-          ? 'Your service request has been posted with a fixed price!'
-          : 'Your service request is open for bids!',
+          ? 'Your service request has been posted with a fixed budget.'
+          : 'Your service request is now open for provider offers.',
         [
           {
             text: 'OK',
@@ -130,7 +130,7 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
       );
     } catch (error: any) {
       logger.error(TAG, 'Request creation failed', error);
-      const msg = error.response?.data?.message || 'Failed to create request';
+      const msg = error.response?.data?.message || 'Failed to create request. Please try again.';
       Alert.alert('Error', msg);
     } finally {
       setLoading(false);
@@ -143,7 +143,7 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Create Request</Text>
+        <Text style={styles.title}>Create a Service Request</Text>
         <View style={{ width: 50 }} />
       </View>
 
@@ -153,10 +153,10 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
           <Text style={styles.categoryName}>{category.name}</Text>
         </View>
 
-        <Text style={styles.label}>Describe Your Needs</Text>
+        <Text style={styles.label}>Describe the Job</Text>
         <TextInput
           style={styles.textArea}
-          placeholder="What service do you need? Be as detailed as possible..."
+          placeholder="Explain what needs to be done. Add details to get better responses."
           value={description}
           onChangeText={setDescription}
           multiline
@@ -170,8 +170,8 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
           {description.length}/{VALIDATION.MAX_DESCRIPTION_LENGTH}
         </Text>
 
-        {/* ✅ IMAGE UPLOAD SECTION */}
-        <Text style={styles.label}>Add Images (Optional)</Text>
+        {/* IMAGE UPLOAD */}
+        <Text style={styles.label}>Add Photos (Optional)</Text>
         <TouchableOpacity
           style={styles.imagePickerButton}
           onPress={pickImage}
@@ -179,11 +179,10 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
         >
           <Text style={styles.imageIcon}>📷</Text>
           <Text style={styles.imagePickerText}>
-            {images.length >= 5 ? 'Max 5 images' : `Add Images (${images.length}/5)`}
+            {images.length >= 5 ? 'Maximum 5 photos allowed' : `Upload Photos (${images.length}/5)`}
           </Text>
         </TouchableOpacity>
 
-        {/* Display selected images */}
         {images.length > 0 && (
           <View style={styles.imagesList}>
             {images.map((image, idx) => (
@@ -208,9 +207,9 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
           >
             <Text style={styles.priceTypeIcon}>💰</Text>
             <Text style={[styles.priceTypeText, !isFixedPrice && styles.priceTypeTextActive]}>
-              Open for Bids
+              Receive Bids
             </Text>
-            <Text style={styles.priceTypeDesc}>Let providers bid</Text>
+            <Text style={styles.priceTypeDesc}>Providers compete with offers</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -220,18 +219,18 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
           >
             <Text style={styles.priceTypeIcon}>💵</Text>
             <Text style={[styles.priceTypeText, isFixedPrice && styles.priceTypeTextActive]}>
-              Fixed Price
+              Set a Fixed Budget
             </Text>
-            <Text style={styles.priceTypeDesc}>Set your budget</Text>
+            <Text style={styles.priceTypeDesc}>Post a clear price upfront</Text>
           </TouchableOpacity>
         </View>
 
         {isFixedPrice && (
           <View style={styles.fixedPriceContainer}>
-            <Text style={styles.label}>Your Budget (Rs.)</Text>
+            <Text style={styles.label}>Your Budget (PKR)</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g., 5000"
+              placeholder="Enter your budget (e.g., 5,000)"
               value={fixedAmount}
               onChangeText={setFixedAmount}
               keyboardType="numeric"
@@ -245,8 +244,8 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
           <Text style={styles.infoIcon}>ℹ️</Text>
           <Text style={styles.infoText}>
             {isFixedPrice
-              ? 'Providers can accept your fixed price or negotiate'
-              : 'Multiple providers will submit their bids. You choose the best one!'}
+              ? 'Providers can accept your price or request adjustments.'
+              : 'Multiple providers will send offers. Choose the one that fits you best.'}
           </Text>
         </View>
 
@@ -259,7 +258,7 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-              <Text style={styles.submitButtonText}>Post Request</Text>
+              <Text style={styles.submitButtonText}>Post Service Request</Text>
               <Text style={styles.submitButtonIcon}>✓</Text>
             </>
           )}
@@ -269,6 +268,7 @@ export default function ServiceRequestScreen({ route, navigation }: any) {
   );
 }
 
+// styles unchanged
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FA' },
   header: {
@@ -326,73 +326,24 @@ const styles = StyleSheet.create({
   },
   imageIcon: { fontSize: 24, marginRight: 12 },
   imagePickerText: { fontSize: 15, color: '#333', fontWeight: '600' },
-  imagesList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 20,
-    gap: 10,
-  },
+  imagesList: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20, gap: 10 },
   imageItem: { position: 'relative', marginBottom: 10 },
   thumbnail: { width: 100, height: 100, borderRadius: 12 },
-  removeImageBtn: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F44336',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  removeImageBtn: { position: 'absolute', top: -8, right: -8, width: 32, height: 32, borderRadius: 16, backgroundColor: '#F44336', justifyContent: 'center', alignItems: 'center' },
   removeImageText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   priceTypeContainer: { flexDirection: 'row', gap: 12, marginBottom: 20 },
-  priceTypeButton: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#E0E0E0',
-  },
+  priceTypeButton: { flex: 1, backgroundColor: '#fff', borderRadius: 16, padding: 20, alignItems: 'center', borderWidth: 2, borderColor: '#E0E0E0' },
   priceTypeActive: { borderColor: '#4CAF50', backgroundColor: '#F0FDF4' },
   priceTypeIcon: { fontSize: 32, marginBottom: 8 },
   priceTypeText: { fontSize: 15, fontWeight: '700', color: '#666', marginBottom: 4 },
   priceTypeTextActive: { color: '#4CAF50' },
   priceTypeDesc: { fontSize: 12, color: '#999' },
   fixedPriceContainer: { marginBottom: 20 },
-  input: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    color: '#333',
-  },
-  infoBox: {
-    flexDirection: 'row',
-    backgroundColor: '#E3F2FD',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 25,
-  },
+  input: { backgroundColor: '#fff', borderRadius: 16, padding: 16, fontSize: 16, borderWidth: 1, borderColor: '#E0E0E0', color: '#333' },
+  infoBox: { flexDirection: 'row', backgroundColor: '#E3F2FD', borderRadius: 12, padding: 15, marginBottom: 25 },
   infoIcon: { fontSize: 20, marginRight: 10 },
   infoText: { flex: 1, fontSize: 14, color: '#1976D2', lineHeight: 20 },
-  submitButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 16,
-    padding: 18,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
+  submitButton: { backgroundColor: '#4CAF50', borderRadius: 16, padding: 18, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', shadowColor: '#4CAF50', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
   buttonDisabled: { opacity: 0.6 },
   submitButtonText: { color: '#fff', fontSize: 18, fontWeight: '800', marginRight: 8 },
   submitButtonIcon: { color: '#fff', fontSize: 20, fontWeight: '700' },

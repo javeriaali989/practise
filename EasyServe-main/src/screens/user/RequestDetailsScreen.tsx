@@ -1,7 +1,3 @@
-// ============================================
-// screens/user/RequestDetailsScreen.tsx - FIXED
-// ============================================
-
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -18,10 +14,9 @@ import api from '../../config/api';
 import { logger } from '../../utils/logger';
 import { formatters } from '../../utils/formatter';
 import { STATUS_COLORS } from '../../utils/constants';
-import { ServiceRequest } from "../../types"
-import { Bid } from '../../types';
-const TAG = 'RequestDetailsScreen';
+import { ServiceRequest, Bid } from '../../types';
 
+const TAG = 'RequestDetailsScreen';
 
 export default function RequestDetailsScreen({ route, navigation }: any) {
   const { requestId } = route.params;
@@ -49,17 +44,14 @@ export default function RequestDetailsScreen({ route, navigation }: any) {
 
       setRequest(requestRes.data);
       setBids(
-        (bidsRes.data || []).sort(
-          (a: Bid, b: Bid) =>
-            a.status === 'accepted'
-              ? -1
-              : b.status === 'accepted'
-                ? 1
-                : a.proposedAmount - b.proposedAmount
+        (bidsRes.data || []).sort((a: Bid, b: Bid) =>
+          a.status === 'accepted'
+            ? -1
+            : b.status === 'accepted'
+            ? 1
+            : a.proposedAmount - b.proposedAmount
         )
       );
-
-      logger.info(TAG, `Loaded request with ${bidsRes.data.length} bids`);
     } catch (error) {
       logger.error(TAG, 'Error loading data', error);
       Alert.alert('Error', 'Failed to load request details');
@@ -85,15 +77,12 @@ export default function RequestDetailsScreen({ route, navigation }: any) {
           onPress: async () => {
             try {
               setLoading(true);
-              logger.info(TAG, `Accepting bid: ${bidId}`);
-
               await api.post('/service-requests/accept-bid', { bidId });
-
-              Alert.alert('Success', 'Bid accepted! Provider will be notified.');
+              Alert.alert('Success', 'Bid accepted! Provider notified.');
               loadData();
             } catch (error: any) {
-              logger.error(TAG, 'Error accepting bid', error);
-              const msg = error.response?.data?.message || 'Failed to accept bid';
+              const msg =
+                error.response?.data?.message || 'Failed to accept bid';
               Alert.alert('Error', msg);
             } finally {
               setLoading(false);
@@ -106,7 +95,7 @@ export default function RequestDetailsScreen({ route, navigation }: any) {
 
   if (loading) {
     return (
-      <View style={styles.loaderContainer}>
+      <View style={styles.loader}>
         <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     );
@@ -117,21 +106,21 @@ export default function RequestDetailsScreen({ route, navigation }: any) {
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Request not found</Text>
         <TouchableOpacity
-          style={styles.retryButton}
+          style={styles.backAction}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.retryButtonText}>Go Back</Text>
+          <Text style={styles.backActionText}>Go Back</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  const getStatusColor = (status: string) => {
-    return STATUS_COLORS[status] || '#999';
-  };
+  const getStatusColor = (status: string) =>
+    STATUS_COLORS[status] || '#999';
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>← Back</Text>
@@ -151,11 +140,15 @@ export default function RequestDetailsScreen({ route, navigation }: any) {
         }
         showsVerticalScrollIndicator={false}
       >
+        {/* Request Summary */}
         <View style={styles.requestCard}>
           <View style={styles.cardHeader}>
             <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{request.categoryName}</Text>
+              <Text style={styles.categoryText}>
+                {request.categoryName}
+              </Text>
             </View>
+
             <View
               style={[
                 styles.statusBadge,
@@ -166,96 +159,107 @@ export default function RequestDetailsScreen({ route, navigation }: any) {
             </View>
           </View>
 
-          <Text style={styles.descriptionLabel}>Description:</Text>
+          <Text style={styles.descriptionLabel}>Description</Text>
           <Text style={styles.description}>{request.description}</Text>
 
           {request.requestType === 'fixed' && (
-            <View style={styles.priceCard}>
-              <Text style={styles.priceLabel}>Fixed Budget:</Text>
-              <Text style={styles.priceValue}>
+            <View style={styles.budgetRow}>
+              <Text style={styles.budgetLabel}>Fixed Budget</Text>
+              <Text style={styles.budgetValue}>
                 {formatters.currency(request.fixedAmount || 0)}
               </Text>
             </View>
           )}
 
-          <Text style={styles.dateText}>
-            Posted {request.createdAt ? formatters.date(request.createdAt) : 'N/A'}
+          <Text style={styles.metaText}>
+            Posted{' '}
+            {request.createdAt
+              ? formatters.date(request.createdAt)
+              : 'N/A'}
           </Text>
         </View>
 
-        {request.status === 'assigned' && request.assignedProviderName && (
-          <View style={styles.assignedCard}>
-            <Text style={styles.assignedIcon}>✅</Text>
-            <View style={styles.assignedInfo}>
-              <Text style={styles.assignedLabel}>Assigned to:</Text>
-              <Text style={styles.assignedName}>
-                {request.assignedProviderName}
-              </Text>
+        {/* Assigned Provider */}
+        {request.status === 'assigned' &&
+          request.assignedProviderName && (
+            <View style={styles.assignedCard}>
+              <Text style={styles.assignedIcon}>✅</Text>
+              <View>
+                <Text style={styles.assignedLabel}>Assigned to</Text>
+                <Text style={styles.assignedName}>
+                  {request.assignedProviderName}
+                </Text>
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
+        {/* Bids */}
         <View style={styles.bidsSection}>
           <Text style={styles.sectionTitle}>
             Bids Received ({bids.length})
           </Text>
 
           {bids.length === 0 ? (
-            <View style={styles.noBidsContainer}>
+            <View style={styles.noBids}>
               <Text style={styles.noBidsIcon}>💰</Text>
               <Text style={styles.noBidsText}>No bids yet</Text>
               <Text style={styles.noBidsSubtext}>
-                Providers will submit their bids soon
+                Providers will respond soon
               </Text>
             </View>
           ) : (
             <FlatList
               data={bids}
-              keyExtractor={(item, index) => item._id ?? index.toString()}
+              keyExtractor={(item, index) =>
+                item._id ?? index.toString()
+              }
               scrollEnabled={false}
               renderItem={({ item }) => {
-                const isAccepted = item.status === 'accepted';
+                const accepted = item.status === 'accepted';
 
                 return (
                   <View
                     style={[
                       styles.bidCard,
-                      isAccepted && styles.bidCardAccepted,
+                      accepted && styles.bidAccepted,
                     ]}
                   >
                     <View style={styles.bidHeader}>
-                      <View style={styles.providerAvatar}>
-                        <Text style={styles.providerAvatarText}>👤</Text>
+                      <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>👤</Text>
                       </View>
-                      <View style={styles.bidInfo}>
+
+                      <View style={{ flex: 1 }}>
                         <Text style={styles.providerName}>
                           {item.providerName}
                         </Text>
                         <Text
                           style={[
                             styles.bidAmount,
-                            isAccepted && styles.bidAmountAccepted,
+                            accepted && styles.bidAmountAccepted,
                           ]}
                         >
-                          {formatters.currency(item.proposedAmount)}
+                          {formatters.currency(
+                            item.proposedAmount
+                          )}
                         </Text>
                       </View>
+
                       <View
                         style={[
-                          styles.bidStatusBadge,
+                          styles.bidStatus,
                           {
                             backgroundColor:
                               item.status === 'accepted'
                                 ? '#4CAF50'
                                 : item.status === 'rejected'
-                                  ? '#F44336'
-                                  : '#FF9800',
+                                ? '#F44336'
+                                : '#FF9800',
                           },
                         ]}
                       >
                         <Text style={styles.bidStatusText}>
-                          {item.status.charAt(0).toUpperCase() +
-                            item.status.slice(1)}
+                          {item.status}
                         </Text>
                       </View>
                     </View>
@@ -266,16 +270,21 @@ export default function RequestDetailsScreen({ route, navigation }: any) {
                       </Text>
                     )}
 
-                    <Text style={styles.bidDate}>
-                      Posted {formatters.date(request.createdAt || '')}
+                    <Text style={styles.metaText}>
+                      Posted{' '}
+                      {formatters.date(
+                        request.createdAt || ''
+                      )}
                     </Text>
 
                     {item.status === 'pending' &&
                       request.status !== 'assigned' && (
                         <TouchableOpacity
+                          activeOpacity={0.85}
                           style={styles.acceptButton}
-                          onPress={() => item._id && handleAcceptBid(item._id)}
-                          disabled={loading}
+                          onPress={() =>
+                            item._id && handleAcceptBid(item._id)
+                          }
                         >
                           <Text style={styles.acceptButtonText}>
                             Accept Bid ✓
@@ -295,94 +304,148 @@ export default function RequestDetailsScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FA' },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: 50,
-    paddingBottom: 20,
+    paddingBottom: 18,
     paddingHorizontal: 20,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
+
   backButton: { fontSize: 16, color: '#4CAF50', fontWeight: '600' },
   title: { fontSize: 20, fontWeight: '800', color: '#333' },
-  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  errorText: { color: '#999', fontSize: 16, marginBottom: 20 },
-  retryButton: { backgroundColor: '#4CAF50', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 10 },
-  retryButtonText: { color: '#fff', fontWeight: '600' },
+
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
   content: { padding: 20 },
+
   requestCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
     elevation: 3,
   },
+
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 14,
   },
-  categoryBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  categoryText: { fontSize: 13, fontWeight: '700', color: '#1976D2' },
-  statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
-  statusText: { fontSize: 12, fontWeight: '700', color: '#fff', textTransform: 'uppercase' },
-  descriptionLabel: { fontSize: 14, fontWeight: '700', color: '#666', marginBottom: 8 },
-  description: { fontSize: 15, color: '#333', lineHeight: 22, marginBottom: 15 },
-  priceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0FDF4',
-    padding: 12,
+
+  categoryBadge: {
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 10,
-    marginBottom: 15,
-    gap: 8,
   },
-  priceLabel: { fontSize: 14, color: '#666', fontWeight: '600' },
-  priceValue: { fontSize: 20, fontWeight: '800', color: '#4CAF50' },
-  dateText: { fontSize: 12, color: '#999' },
+
+  categoryText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1976D2',
+  },
+
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+
+  statusText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fff',
+    textTransform: 'uppercase',
+  },
+
+  descriptionLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#666',
+    marginBottom: 6,
+  },
+
+  description: {
+    fontSize: 15,
+    color: '#333',
+    lineHeight: 22,
+    marginBottom: 14,
+  },
+
+  budgetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#F0FDF4',
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+
+  budgetLabel: { fontSize: 14, color: '#666', fontWeight: '600' },
+  budgetValue: { fontSize: 20, fontWeight: '800', color: '#4CAF50' },
+
+  metaText: { fontSize: 12, color: '#999', marginTop: 6 },
+
   assignedCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F0FDF4',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 20,
     marginBottom: 20,
     borderWidth: 2,
     borderColor: '#4CAF50',
   },
-  assignedIcon: { fontSize: 32, marginRight: 15 },
-  assignedInfo: { flex: 1 },
-  assignedLabel: { fontSize: 13, color: '#666', marginBottom: 4 },
+
+  assignedIcon: { fontSize: 30, marginRight: 14 },
+  assignedLabel: { fontSize: 13, color: '#666' },
   assignedName: { fontSize: 18, fontWeight: '800', color: '#333' },
-  bidsSection: { marginBottom: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#333', marginBottom: 15 },
-  noBidsContainer: { backgroundColor: '#fff', borderRadius: 16, padding: 40, alignItems: 'center' },
-  noBidsIcon: { fontSize: 60, marginBottom: 15 },
-  noBidsText: { fontSize: 16, fontWeight: '700', color: '#333', marginBottom: 5 },
+
+  bidsSection: { marginBottom: 30 },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#333',
+    marginBottom: 12,
+  },
+
+  noBids: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 40,
+    alignItems: 'center',
+  },
+
+  noBidsIcon: { fontSize: 60, marginBottom: 12 },
+  noBidsText: { fontSize: 16, fontWeight: '700', color: '#333' },
   noBidsSubtext: { fontSize: 14, color: '#999' },
+
   bidCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
     elevation: 2,
   },
-  bidCardAccepted: { borderWidth: 2, borderColor: '#4CAF50' },
-  bidHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  providerAvatar: {
+
+  bidAccepted: {
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+  },
+
+  bidHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+
+  avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
@@ -391,20 +454,72 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  providerAvatarText: { fontSize: 24 },
-  bidInfo: { flex: 1 },
-  providerName: { fontSize: 15, fontWeight: '700', color: '#333', marginBottom: 4 },
-  bidAmount: { fontSize: 16, fontWeight: '800', color: '#2196F3' },
+
+  avatarText: { fontSize: 24 },
+
+  providerName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#333',
+  },
+
+  bidAmount: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#2196F3',
+  },
+
   bidAmountAccepted: { color: '#4CAF50' },
-  bidStatusBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
-  bidStatusText: { fontSize: 11, fontWeight: '700', color: '#fff', textTransform: 'uppercase' },
-  bidNote: { fontSize: 13, color: '#666', lineHeight: 18, marginBottom: 10 },
-  bidDate: { fontSize: 12, color: '#999', marginBottom: 12 },
+
+  bidStatus: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+
+  bidStatusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
+    textTransform: 'uppercase',
+  },
+
+  bidNote: {
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+
   acceptButton: {
     backgroundColor: '#4CAF50',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 14,
+    padding: 14,
     alignItems: 'center',
+    marginTop: 10,
   },
-  acceptButtonText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+
+  acceptButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+
+  errorText: { color: '#999', fontSize: 16, marginBottom: 20 },
+
+  backAction: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+
+  backActionText: { color: '#fff', fontWeight: '700' },
 });
